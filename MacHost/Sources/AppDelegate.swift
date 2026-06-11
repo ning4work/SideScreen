@@ -77,6 +77,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Check permissions
         Task {
             await checkPermissions()
+            await autoStartIfEnabled()
         }
 
         // Periodic status refresh for the per-mode checklist (ADB / WiFi / Listening IP).
@@ -282,6 +283,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             print("⚠️  Accessibility permission not granted - touch control will not work")
         }
+    }
+
+    /// Start streaming at launch when the Auto-start setting is enabled.
+    /// Skips silently instead of calling startServer()'s permission alert so a
+    /// revoked screen-recording grant doesn't pop dialogs at every login.
+    func autoStartIfEnabled() async {
+        guard settings.autoStartOnLaunch, !settings.isRunning else { return }
+        guard settings.hasScreenRecordingPermission else {
+            debugLog("Auto-start skipped — screen recording permission not granted")
+            return
+        }
+        debugLog("Auto-start: starting server in \(settings.connectionMode.rawValue) mode")
+        await startServer()
     }
 
     @MainActor

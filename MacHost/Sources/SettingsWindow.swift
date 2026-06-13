@@ -1319,6 +1319,10 @@ struct WirelessSection: View {
     /// the underlying lastConnected timestamp hasn't changed (e.g. while a
     /// device is disconnected and we still want "5 minutes ago" to count up).
     @State private var nowTick: Date = Date()
+    @State private var pairingURLString: String = ""
+    @State private var urlCopied: Bool = false
+    @State private var customPassphrase: String = ""
+    @State private var passphraseApplied: Bool = false
 
     var body: some View {
         VStack(spacing: 12) {
@@ -1356,8 +1360,60 @@ struct WirelessSection: View {
                     Text(LANAddressResolver.primaryIPv4().map { "Listening: \($0):\(settings.port)" } ?? "WiFi disconnected — no LAN address")
                         .font(.system(size: 10, design: .monospaced))
                         .foregroundColor(.secondary)
+                    Button(action: {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(pairingURLString, forType: .string)
+                        urlCopied = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { urlCopied = false }
+                    }) {
+                        Label(urlCopied ? "Copied!" : "Copy Pairing URL", systemImage: urlCopied ? "checkmark" : "doc.on.doc")
+                            .font(.system(size: 11))
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .disabled(pairingURLString.isEmpty)
                 }
                 .frame(maxWidth: .infinity)
+            }
+
+            FrostedGroupBox(title: "Custom Passphrase", icon: "key") {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Set a passphrase so Android can connect by typing IP + passphrase instead of scanning QR.")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                    HStack(spacing: 8) {
+                        TextField("Enter passphrase…", text: $customPassphrase)
+                            .textFieldStyle(.roundedBorder)
+                            .font(.system(size: 12))
+                        Button(passphraseApplied ? "Applied!" : "Apply") {
+                            guard !customPassphrase.isEmpty else { return }
+                            WirelessAuth.applyPassphrase(customPassphrase)
+                            refreshQR()
+                            refreshPaired()
+                            passphraseApplied = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { passphraseApplied = false }
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                        .disabled(customPassphrase.isEmpty)
+                        if WirelessAuth.loadPassphrase() != nil {
+                            Button("Clear") {
+                                customPassphrase = ""
+                                _ = WirelessAuth.reset()
+                                refreshQR()
+                                refreshPaired()
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                            .foregroundColor(.red)
+                        }
+                    }
+                    if let saved = WirelessAuth.loadPassphrase() {
+                        Text("Active passphrase: \(saved)")
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundColor(.green)
+                    }
+                }
             }
 
             FrostedGroupBox(
@@ -1423,6 +1479,7 @@ struct WirelessSection: View {
             refreshQR()
             refreshPaired()
             nowTick = Date()
+            customPassphrase = WirelessAuth.loadPassphrase() ?? ""
         }
         // One-parameter onChange(of:perform:) works on macOS 13+. The
         // two-parameter form requires macOS 14 and would block Ventura.
@@ -1450,6 +1507,7 @@ struct WirelessSection: View {
         let host = LANAddressResolver.primaryIPv4() ?? "0.0.0.0"
         let name = Host.current().localizedName ?? "Mac"
         let url = PairingURL.build(host: host, port: settings.port, token: token, name: name)
+        pairingURLString = url
         qrImage = QRRenderer.render(url: url, size: 180)
     }
 

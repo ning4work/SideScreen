@@ -692,6 +692,17 @@
                         android:layout_marginBottom="16dp" />
 
                     <com.google.android.material.button.MaterialButton
+                        android:id="@+id/wirelessRepairReconnectButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:text="Retry Connection"
+                        android:textSize="16sp"
+                        app:cornerRadius="16dp"
+                        app:backgroundTint="#4CAF50"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginBottom="8dp" />
+
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/wirelessRescanButton"
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
@@ -739,6 +750,45 @@
                         app:cornerRadius="16dp"
                         app:backgroundTint="#007AFF" />
                 </LinearLayout>
+
+                <!-- History section -->
+                <LinearLayout
+                    android:id="@+id/wirelessHistoryContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:background="@drawable/instruction_bg"
+                    android:layout_marginBottom="16dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="History"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp" />
+
+                    <LinearLayout
+                        android:id="@+id/wirelessHistoryList"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+                </LinearLayout>
+
+                <!-- Manual input button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/wirelessManualInputButton"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Connect with Passphrase"
+                    android:textColor="#AAAAAA"
+                    app:strokeColor="#444444"
+                    app:cornerRadius="16dp"
+                    android:layout_marginBottom="8dp" />
 
             </LinearLayout>
             <!-- ============= /WIRELESS MODE CONTENT ============= -->

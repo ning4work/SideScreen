@@ -778,6 +778,15 @@ struct SettingsView: View {
                         .controlSize(.large)
                         .disabled(!settings.hasScreenRecordingPermission)
 
+                        if !settings.isRunning {
+                            Toggle("Auto-start", isOn: $settings.autoStartOnLaunch)
+                                .toggleStyle(.checkbox)
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                                .help("Start streaming automatically when SideScreen launches")
+                                .transition(.opacity)
+                        }
+
                         if settings.isRunning {
                             HStack(spacing: 6) {
                                 Circle()
@@ -1072,6 +1081,10 @@ class DisplaySettings: ObservableObject {
     @Published var connectionMode: ConnectionMode {
         didSet { save("connectionMode", connectionMode.rawValue) }
     }
+    /// Start streaming automatically right after the app launches.
+    @Published var autoStartOnLaunch: Bool {
+        didSet { save("autoStartOnLaunch", autoStartOnLaunch) }
+    }
 
     // Runtime state (not persisted)
     @Published var displayCreated = false
@@ -1110,6 +1123,7 @@ class DisplaySettings: ObservableObject {
         self.touchEnabled = defaults.object(forKey: keyPrefix + "touchEnabled") as? Bool ?? true
         let modeRaw = defaults.string(forKey: keyPrefix + "connectionMode") ?? ConnectionMode.usb.rawValue
         self.connectionMode = ConnectionMode(rawValue: modeRaw) ?? .usb
+        self.autoStartOnLaunch = defaults.bool(forKey: keyPrefix + "autoStartOnLaunch")
 
         print("Loaded settings: \(resolution) @ \(refreshRate)Hz, bitrate=\(bitrate), quality=\(quality)")
     }
@@ -1173,7 +1187,7 @@ class DisplaySettings: ObservableObject {
     func resetToDefaults() {
         let keys = ["resolution", "refreshRate", "hiDPI", "bitrate", "quality",
                     "gamingBoost", "port", "rotation", "showAllResolutions",
-                    "customWidth", "customHeight", "touchEnabled"]
+                    "customWidth", "customHeight", "touchEnabled", "autoStartOnLaunch"]
         for key in keys {
             defaults.removeObject(forKey: keyPrefix + key)
         }
@@ -1190,6 +1204,7 @@ class DisplaySettings: ObservableObject {
         customWidth = 1920
         customHeight = 1200
         touchEnabled = true
+        autoStartOnLaunch = false
 
         print("Settings reset to defaults")
     }
